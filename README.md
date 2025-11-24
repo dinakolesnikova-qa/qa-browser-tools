@@ -1,9 +1,23 @@
-# qa-browser-tools
 
-**🕵️ The "Network Spy" Script** /1-network-spy.js
-This is an advanced technique called "Monkey Patching". We are going to secretly wrap the browser's JSON processor. Every time the website receives data, our spy will peek inside, see if it contains hotels, and save them for you.
-How to use it:
-1. Restart Command + R
-2. Paste this code into the Console IMMEDIATELY (before your search).
-3. Then Search and Scroll down to load all your hotels.
-4. Watch the console—it will count them automatically!
+# QA Browser Tools 🛠️
+
+Collection of JS scripts to validate Hotel Search results in Chrome Console.
+
+## How to use
+
+### Step 1: Capture Data 🕵️
+1. Open `1-network-spy.js`.
+2. Copy code and paste into Console BEFORE searching.
+3. Search and scroll down to load all hotels.
+
+### Step 2: Validate ✅
+
+**If testing Location with Boundaries (Zone 1 + Zone 2):**
+* Use `2-test-boundaries.js`.
+* Updates `centerLat` / `centerLon` inside the script.
+* Checks: Sorting order, 30km Radius, Duplicates.
+
+**If testing Location without Boundaries (Radius Only):**
+* Use `3-test-radius-only.js`.
+* Updates `centerLat` / `centerLon` inside the script.
+* Checks: 30km Radius, Duplicates.
