@@ -1,6 +1,6 @@
 # qa-browser-tools
 
-🕵️ The "Network Spy" Script
+**🕵️ The "Network Spy" Script**
 This is an advanced technique called "Monkey Patching". We are going to secretly wrap the browser's JSON processor. Every time the website receives data, our spy will peek inside, see if it contains hotels, and save them for you.
 How to use it:
 1. Restart Command + R
