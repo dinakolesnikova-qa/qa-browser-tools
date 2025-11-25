@@ -22,6 +22,11 @@ Collection of JS scripts to validate Hotel Search results in Chrome Console.
 * Updates `centerLat` / `centerLon` inside the script.
 * Checks: 30km Radius, Duplicates.
 
+**If testing Default Sorting (Best Score):**
+* Use `4-test-default-sorting.js`.
+* Checks: Verifies that hotels are ranked by `score` (Highest to Lowest).
+* Output: Prints a complete table of all hotels, their rank, and their calculated score.
+
 ---
 
 ## 🧪 Verification (Sabotage Mode)
@@ -75,6 +80,14 @@ Result: 🚨 FAIL: Found 1 duplicate hotels!
 Table: Should show the name of the first hotel in your list.
 If you see all 3 RED failures, your code is perfect.
 
+### 3. Verify "Default Sorting" (Score)
+* **Goal:** Ensure `4-test-default-sorting.js` detects ranking errors.
+* **Steps:**
+  1. Run `1-network-spy.js` and load hotels.
+  2. Run `validate-4-test-default-sorting.js` (Moves the lowest scoring hotel to the #1 position).
+  3. Run `4-test-default-sorting.js`.
+  4. **Result:** Expect **❌ FAIL** (The script should report that the #1 hotel has a lower score than the #2 hotel).
+
   **5.  🧪  The Cleanup**
 Once you have verified the script works, run this to remove the fake data so you can continue working.
 JavaScript
@@ -89,7 +102,25 @@ window.allCapturedHotels.pop(); // Removes Duplicate
 
 console.log("✅ Cleanup complete. Data is clean again.");
 
+/**
+ * 😇 CLEANUP: RESTORE SORTING
+ * Reverses the sabotage by moving the first hotel back to the end of the list.
+ */
+// ==========================================
+// 😇 CLEANUP SCRIPT (UNDO SABOTAGE SORTING)
+// ==========================================
+if (!window.allCapturedHotels || window.allCapturedHotels.length === 0) {
+    console.error("❌ No hotels to clean up!");
+} else {
+    // 1. Remove the hotel from the #1 position (The one we put there)
+    const hotel = window.allCapturedHotels.shift();
 
+    // 2. Put it back at the very end of the list
+    window.allCapturedHotels.push(hotel);
+
+    console.log(`😇 Cleanup Complete: Moved "${hotel.name}" back to the bottom.`);
+    console.log("✅ The list is valid again.");
+}
 
 
 > **Note:** After running a verification test, refresh the page to clear the "fake" data.
