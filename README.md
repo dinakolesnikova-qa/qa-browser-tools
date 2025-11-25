@@ -5,10 +5,15 @@ Collection of JS scripts to validate Hotel Search results in Chrome Console.
 
 ## How to use
 
-### Step 1: Capture Data 🕵️
+### Step 1: Capture Data 🕵️ THEN STOP WHEN NEEDED
 1. Open `1-network-spy.js`.
 2. Copy code and paste into Console BEFORE searching.
 3. Search and scroll down to load all hotels.
+
+**IMPORTANT:** Once scrolling is done, type `window.isSpyActive = false;` in the console to stop capturing. This prevents mixing data if you change sorting or filters later.
+
+window.isSpyActive = false;
+console.log("🛑 Spy stopped. New API calls will be ignored.");
 
 ### Step 2: Validate ✅
 
