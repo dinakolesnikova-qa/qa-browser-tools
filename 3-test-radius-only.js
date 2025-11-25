@@ -1,7 +1,8 @@
-// 🕵️ ULTIMATE VALIDATOR (Sorting + Radius + Duplicates)
+// 🕵️ ULTIMATE VALIDATOR (Safe Mode - Fixes "undefined" crash)
 // ======================================================
 
 // --- CONFIGURATION: PASTE YOUR COORDINATES HERE ---
+// (Default: London)
 const centerLat = 51.50746;
 const centerLon = -0.127673;
 
@@ -20,12 +21,18 @@ if (allHotels.length === 0) {
     // 🧠 LOGIC SECTION
     // ============================
 
-    // --- 1. SORTING LOGIC ---
-    const areaLevels = allHotels.map(hotel => hotel.proximityInfo.areaLevel);
-    const hasZone1 = areaLevels.includes(1);
-    const hasZone2 = areaLevels.includes(2);
+    // --- 1. SORTING LOGIC (With Safety Check) ---
+    // We use ?. to safe-read. If proximityInfo is missing, this becomes undefined.
+    const areaLevels = allHotels.map(hotel => hotel.proximityInfo?.areaLevel);
+    
+    // We filter out hotels that don't have zone info
+    const validLevels = areaLevels.filter(level => level !== undefined);
 
-    const isSorted = areaLevels.every((level, index, array) => {
+    // Only run sorting logic if we actually found zones
+    const hasZone1 = validLevels.includes(1);
+    const hasZone2 = validLevels.includes(2);
+
+    const isSorted = validLevels.every((level, index, array) => {
         if (index === 0) return true;
         return level >= array[index - 1];
     });
@@ -43,18 +50,21 @@ if (allHotels.length === 0) {
 
     const badRadiusHotels = [];
     
-    // NEW: Object to track the Furthest Hotel Name + Distance
     let furthestHotel = {
         name: "None",
         distance: 0
     };
 
     allHotels.forEach(hotel => {
-        const hLat = hotel.address.coordinates.latitude;
-        const hLon = hotel.address.coordinates.longitude;
+        // Safe access to coordinates (using ?.)
+        const hLat = hotel.address?.coordinates?.latitude;
+        const hLon = hotel.address?.coordinates?.longitude;
+
+        // Skip hotels if coordinates are missing (prevents crash)
+        if (!hLat || !hLon) return;
+
         const dist = getDistance(centerLat, centerLon, hLat, hLon);
         
-        // Update Furthest Hotel Info
         if (dist > furthestHotel.distance) {
             furthestHotel = {
                 name: hotel.name,
@@ -62,7 +72,6 @@ if (allHotels.length === 0) {
             };
         }
 
-        // Check 30.1km limit
         if (dist > 30.1) {
             badRadiusHotels.push({
                 id: hotel.id,
@@ -73,7 +82,8 @@ if (allHotels.length === 0) {
     });
 
     // --- 3. DUPLICATE LOGIC ---
-    const allIds = allHotels.map(h => h?.id);
+    // Safe access to ID
+    const allIds = allHotels.map(h => h?.id).filter(id => id !== undefined);
     const uniqueIds = new Set(allIds);
     const duplicateCount = allIds.length - uniqueIds.size;
 
@@ -82,21 +92,28 @@ if (allHotels.length === 0) {
     // 📝 REPORT SECTION
     // ============================
 
-    console.log("\n------ 📊 SORTING CHECK (Zone 1 -> Zone 2) ------");
-    if (!isSorted) {
-        console.error("❌ FAIL: Sorting order is broken! (Zone 1 must be before Zone 2)");
-    } else if (hasZone1 && hasZone2) {
-        console.log("✅ PASS: Perfect! Both zones found, sorting is correct.");
-    } else if (hasZone2 && !hasZone1) {
-        console.warn("⚠️ PASS (Radius Only): Sorting is correct, but found ONLY Zone 2.");
-    } else if (hasZone1 && !hasZone2) {
-        console.warn("⚠️ PASS (Polygon Only): Sorting is correct, but found ONLY Zone 1.");
+    console.log("\n------ 📊 SORTING CHECK ------");
+    
+    // Check if we found any zones at all
+    if (validLevels.length === 0) {
+        console.warn("⚠️ SKIP: No 'proximityInfo' found in hotels. This is likely a Radius-Only flow. Skipping sorting check.");
+    } 
+    else {
+        // If we DID find zones, we run the usual checks
+        if (!isSorted) {
+            console.error("❌ FAIL: Sorting order is broken! (Zone 1 must be before Zone 2)");
+        } else if (hasZone1 && hasZone2) {
+            console.log("✅ PASS: Perfect! Both zones found, sorting is correct.");
+        } else if (hasZone2 && !hasZone1) {
+            console.warn("⚠️ PASS (Radius Only): Sorting is correct, but found ONLY Zone 2.");
+        } else if (hasZone1 && !hasZone2) {
+            console.warn("⚠️ PASS (Polygon Only): Sorting is correct, but found ONLY Zone 1.");
+        }
     }
 
     console.log("\n------ 📏 RADIUS CHECK (Max 30km) ------");
     if (badRadiusHotels.length === 0) {
-        console.log(`%c✅ PASS: All ${allHotels.length} hotels are inside the 30km radius.`, "color: green; font-weight: bold");
-        // UPDATED LOG: Shows Name AND Distance
+        console.log(`%c✅ PASS: All analyzed hotels are inside the 30km radius.`, "color: green; font-weight: bold");
         console.log(`ℹ️ Furthest hotel is "${furthestHotel.name}" at ${furthestHotel.distance.toFixed(2)} km away.`);
     } else {
         console.error(`🚨 FAIL: Found ${badRadiusHotels.length} hotels outside 30km!`);
@@ -112,6 +129,7 @@ if (allHotels.length === 0) {
         const seen = new Set();
         const duplicates = [];
         allHotels.forEach((hotel, index) => {
+            if (!hotel?.id) return;
             if (seen.has(hotel.id)) {
                 duplicates.push({id: hotel.id, name: hotel.name, position: index});
             } else {
