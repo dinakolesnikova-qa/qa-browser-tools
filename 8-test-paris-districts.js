@@ -1,7 +1,7 @@
 /**
- * 🗺️ TEST: PARIS DISTRICT VALIDATOR (With Zone ID)
- * Checks every hotel against 5 different Polygons.
- * OUTPUT: Table with Zone ID + Y/N for each district.
+ * 🗺️ TEST: PARIS DISTRICT VALIDATOR (Full Precision)
+ * Checks every hotel against 5 Polygons.
+ * OUTPUT: Table with EXACT Lat/Lon (no rounding) + Zone ID.
  */
 
 // ==========================================
@@ -51,19 +51,20 @@ if (allHotels.length === 0) {
 
     // --- PROCESS TABLE DATA ---
     const tableData = allHotels.map((hotel, index) => {
-        // Safe coordinates
         const hLat = hotel.address?.coordinates?.latitude;
         const hLon = hotel.address?.coordinates?.longitude;
-        
-        // Safe ID access (Return NULL if missing)
         const zoneId = hotel.leisureSearchPriorityZoneId || "NULL";
+
+        // Show FULL PRECISION (No toFixed)
+        // Just combine them into a string directly
+        const coordString = (hLat && hLon) ? `${hLat}, ${hLon}` : "N/A";
 
         // Basic Row Info
         const row = {
             "Rank": index + 1,
             "Name": hotel.name,
-            "Zone ID": zoneId, // Added Column
-            "Lat/Lon": hLat && hLon ? `${hLat.toFixed(4)}, ${hLon.toFixed(4)}` : "N/A"
+            "Zone ID": zoneId, 
+            "Lat/Lon": coordString
         };
 
         // Check against EVERY district
@@ -81,6 +82,6 @@ if (allHotels.length === 0) {
     });
 
     // --- PRINT TABLE ---
-    console.log("\n📋 PARIS DISTRICT MATRIX REPORT");
+    console.log("\n📋 PARIS DISTRICT MATRIX REPORT (Full Precision)");
     console.table(tableData);
 }
