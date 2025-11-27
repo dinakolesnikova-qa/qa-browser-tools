@@ -94,7 +94,7 @@ if (allHotels.length === 0) {
                 winnerReason = `Matches P${expectedWinner.priority} (${expectedWinner.name})`;
             } else {
                 status = "🚨 FAIL";
-                winnerReason = `Expected P${expectedWinner.priority} (${expectedWinner.name}) but got ${actualZoneId}`;
+                winnerReason = `Expected P${expectedWinner.priority} (${expectedWinner.name})`;
             }
         } else {
             status = "⚪ OUTSIDE";
