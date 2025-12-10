@@ -1,0 +1,72 @@
+// --- 🕵️ SUPPLIER SPY SCRIPT ---
+(function() {
+    console.clear();
+    console.log("%c✅ SPY ACTIVATED: Waiting for search results...", "color: green; font-weight: bold; font-size: 14px");
+
+    // Store captured data
+    window.capturedHotelData = [];
+
+    // Helper to process and print data
+    function processHotels(hotels) {
+        const extractedData = hotels.map(hotel => {
+            // Try to find the supplier in the products list
+            let supplierName = "N/A";
+            
+            if (hotel.products && Array.isArray(hotel.products) && hotel.products.length > 0) {
+                // Usually the first product contains the main supplier info
+                supplierName = hotel.products[0].supplier || "Unknown";
+            }
+
+            return {
+                "Hotel ID": hotel.id,
+                "Hotel Name": hotel.name,
+                "Supplier": supplierName
+            };
+        });
+
+        // Add to main list and print
+        window.capturedHotelData.push(...extractedData);
+        
+        console.group("🏨 New Results Loaded");
+        console.table(extractedData);
+        console.groupEnd();
+        
+        console.log(`Total hotels captured: ${window.capturedHotelData.length}`);
+        console.log("Type 'copy(window.capturedHotelData)' to copy JSON to clipboard.");
+    }
+
+    // 1. Hook into XMLHttpRequest (Old style AJAX)
+    const originalXHR = window.XMLHttpRequest;
+    function newXHR() {
+        const realXHR = new originalXHR();
+        realXHR.addEventListener("load", function() {
+            if (this.responseURL && this.responseURL.includes("api-search")) {
+                try {
+                    const data = JSON.parse(this.responseText);
+                    if (data.results && data.results.accommodations) {
+                        processHotels(data.results.accommodations);
+                    }
+                } catch (e) { /* Ignore non-JSON */ }
+            }
+        });
+        return realXHR;
+    }
+    window.XMLHttpRequest = newXHR;
+
+    // 2. Hook into Fetch (Modern AJAX)
+    const originalFetch = window.fetch;
+    window.fetch = async function(...args) {
+        const response = await originalFetch(...args);
+        const clone = response.clone();
+        
+        if (response.url && response.url.includes("api-search")) {
+            clone.json().then(data => {
+                if (data.results && data.results.accommodations) {
+                    processHotels(data.results.accommodations);
+                }
+            }).catch(() => {});
+        }
+        return response;
+    };
+
+})();
